@@ -1,0 +1,94 @@
+# EKF State Estimation Parameters for Smart Wheelchair
+# robot_localization EKF node configuration
+# Fuses: wheel odometry + IMU for wheelchair pose estimation
+
+ekf_filter_node:
+  ros__parameters:
+    # General settings
+    frequency: 30.0              # Filter update rate (Hz)
+    sensor_timeout: 0.1          # Max allowed delay between sensor messages
+    two_d_mode: true             # Force 3D state to 2D (no z, roll, pitch)
+    transform_time_offset: 0.0
+    transform_timeout: 0.0
+    print_diagnostics: true
+    debug: false
+    
+    # Reference frames
+    world_frame: odom            # World frame for output odometry
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    
+    # ============================================================
+    # Sensor 0: Wheel Odometry (WHILL Model CR encoder odometry)
+    # ============================================================
+    odom0: /wheel_odom           # Topic publishing nav_msgs/Odometry
+    odom0_config: [
+      true,  true,  false,       # x, y, z positions
+      false, false, true,        # roll, pitch, yaw
+      true,  true,  false,       # vx, vy, vz velocities
+      false, false, true,        # angular vx, vy, vz
+      false, false, false        # ax, ay, az linear accelerations
+    ]
+    odom0_queue_size: 5
+    odom0_nodelay: false
+    odom0_differential: false    # Use absolute pose from wheel odom
+    odom0_relative: false
+    
+    # Wheel odometry noise model
+    # WHILL Model CR: 1-2% distance error, 2-3 degree heading error
+    odom0_pose_rejection_threshold: 5.0
+    odom0_twist_rejection_threshold: 1.0
+    
+    # ============================================================
+    # Sensor 1: IMU (Vectornav VN-100 IMU via SPI)
+    # ============================================================
+    imu0: /imu/data              # Topic publishing sensor_msgs/Imu
+    imu0_config: [
+      false, false, false,       # x, y, z positions (not from IMU)
+      true,  true,  true,        # roll, pitch, yaw (from IMU orientation)
+      false, false, false,       # vx, vy, vz velocities
+      true,  true,  true,        # angular velocity (gyroscope)
+      true,  true,  false        # ax, ay (linear acceleration, not z)
+    ]
+    imu0_nodelay: false
+    imu0_differential: false
+    imu0_relative: false
+    imu0_queue_size: 5
+    imu0_remove_gravitational_acceleration: true  # Remove 9.81 m/s^2
+    
+    # Process noise covariance matrix (12x12 for x,y,z,roll,pitch,yaw,vx,vy,vz,vroll,vpitch,vyaw)
+    # Tuned experimentally in hospital corridor tests
+    process_noise_covariance: [
+      0.05, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,     0.0,     0.0,  0.0,  0.0,  0.0,
+      0.0,  0.05, 0.0,  0.0,  0.0,  0.0,  0.0,     0.0,     0.0,  0.0,  0.0,  0.0,
+      0.0,  0.0,  0.06, 0.0,  0.0,  0.0,  0.0,     0.0,     0.0,  0.0,  0.0,  0.0,
+      0.0,  0.0,  0.0,  0.03, 0.0,  0.0,  0.0,     0.0,     0.0,  0.0,  0.0,  0.0,
+      0.0,  0.0,  0.0,  0.0,  0.03, 0.0,  0.0,     0.0,     0.0,  0.0,  0.0,  0.0,
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.06, 0.0,     0.0,     0.0,  0.0,  0.0,  0.0,
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.025,   0.0,     0.0,  0.0,  0.0,  0.0,
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,     0.025,   0.0,  0.0,  0.0,  0.0,
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,     0.0,     0.04, 0.0,  0.0,  0.0,
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,     0.0,     0.0,  0.01, 0.0,  0.0,
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,     0.0,     0.0,  0.0,  0.01, 0.0,
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,     0.0,     0.0,  0.0,  0.0,  0.02
+    ]
+    
+    # Initial state covariance (diagonal)
+    initial_estimate_covariance: [
+      1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+      0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+      0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+      0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+      0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+      0.0,  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,  0.0,
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,  0.0,
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,  0.0,
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,  0.0,
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9, 0.0,
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-9
+    ]
