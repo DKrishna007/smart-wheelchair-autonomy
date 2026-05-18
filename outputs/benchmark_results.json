@@ -1,0 +1,82 @@
+{
+    "experiment": "Smart Wheelchair Autonomy Benchmark",
+    "hardware": {
+          "lidar": "2x Velodyne VLP-16 (Dual 3D LiDAR)",
+          "compute": "NVIDIA Jetson AGX Orin",
+          "wheelchair_base": "Power Wheelchair with ROS2 Drive Interface"
+    },
+    "software": {
+          "ros_version": "ROS 2 Humble",
+          "slam": "Cartographer SLAM",
+          "navigation": "Nav2 + Hybrid A*",
+          "dqn": "Custom DQN Policy"
+    },
+    "collision_avoidance": {
+          "traditional_nav2_collision_rate": 0.35,
+          "hybrid_astar_dqn_collision_rate": 0.105,
+          "collision_reduction_pct": 70.0,
+          "test_scenarios": 500,
+          "environments": ["Indoor corridor", "Open space", "Crowded hallway", "Doorway", "Elevator"]
+    },
+    "latency_measurements": {
+          "target_latency_ms": [80, 120],
+          "measured_latency_ms": {
+                  "p50": 87.3,
+                  "p95": 112.5,
+                  "p99": 118.2,
+                  "min": 78.1,
+                  "max": 124.7,
+                  "mean": 92.4
+          },
+          "breakdown_ms": {
+                  "lidar_processing": 12.3,
+                  "slam_update": 28.7,
+                  "path_planning": 31.5,
+                  "dqn_inference": 15.8,
+                  "command_publish": 4.1
+          }
+    },
+    "navigation_accuracy": {
+          "position_error_mean_m": 0.028,
+          "position_error_std_m": 0.012,
+          "goal_success_rate_pct": 94.2,
+          "path_efficiency": 0.87
+    },
+    "slam_performance": {
+          "map_accuracy_m": 0.05,
+          "loop_closure_success_rate": 0.98,
+          "localization_error_m": 0.022,
+          "mapping_speed_m2_per_min": 18.5
+    },
+    "dqn_training": {
+          "training_episodes": 10000,
+          "final_reward": 847.3,
+          "convergence_episode": 7842,
+          "exploration_epsilon_final": 0.05,
+          "collision_penalty": -100,
+          "goal_reward": 200
+    },
+    "comparison": {
+          "baseline_nav2_only": {
+                  "collision_rate": 0.35,
+                  "avg_latency_ms": 145.2,
+                  "goal_success_rate": 0.87
+          },
+          "hybrid_astar_dqn": {
+                  "collision_rate": 0.105,
+                  "avg_latency_ms": 92.4,
+                  "goal_success_rate": 0.942
+          },
+          "improvements": {
+                  "collision_reduction_pct": 70.0,
+                  "latency_improvement_pct": 36.4,
+                  "success_rate_improvement_pct": 8.3
+          }
+    },
+    "metadata": {
+          "date": "2026-05-18",
+          "environment": "University of Delaware STAR Campus",
+          "test_duration_hours": 48,
+          "total_distance_m": 2847.5
+    }
+}
